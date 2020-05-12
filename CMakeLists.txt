@@ -20,6 +20,8 @@ SET(VERSION "${HIREDIS_MAJOR}.${HIREDIS_MINOR}.${HIREDIS_PATCH}")
 MESSAGE("Detected version: ${VERSION}")
 
 PROJECT(hiredis VERSION "${VERSION}")
+include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
+conan_basic_setup()
 
 SET(ENABLE_EXAMPLES OFF CACHE BOOL "Enable building hiredis examples")
 
@@ -39,7 +41,7 @@ IF(WIN32)
     ADD_COMPILE_DEFINITIONS(_CRT_SECURE_NO_WARNINGS WIN32_LEAN_AND_MEAN)
 ENDIF()
 
-ADD_LIBRARY(hiredis SHARED ${hiredis_sources})
+ADD_LIBRARY(hiredis ${hiredis_sources})
 
 SET_TARGET_PROPERTIES(hiredis
     PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS TRUE
@@ -48,7 +50,9 @@ IF(WIN32 OR MINGW)
     TARGET_LINK_LIBRARIES(hiredis PRIVATE ws2_32)
 ENDIF()
 
-TARGET_INCLUDE_DIRECTORIES(hiredis PUBLIC $<INSTALL_INTERFACE:.> $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>)
+TARGET_INCLUDE_DIRECTORIES(hiredis PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
+    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
 
 CONFIGURE_FILE(hiredis.pc.in hiredis.pc @ONLY)
 
@@ -96,7 +100,7 @@ IF(ENABLE_SSL)
     FIND_PACKAGE(OpenSSL REQUIRED)
     SET(hiredis_ssl_sources 
         ssl.c)
-    ADD_LIBRARY(hiredis_ssl SHARED
+    ADD_LIBRARY(hiredis_ssl
             ${hiredis_ssl_sources})
 
     IF (APPLE)
